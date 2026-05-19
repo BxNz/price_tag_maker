@@ -1,5 +1,13 @@
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ເຄື່ອງມືສ້າງປ້າຍລາຄາ</title>
 <link rel="stylesheet" href="price_tag_maker.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
 
 <h2 class="sr-only">ເຄື່ອງມືສ້າງປ້າຍລາຄາສິນຄ້າ</h2>
 
@@ -129,6 +137,7 @@
 <script>
 // ========== SHARED STATE ==========
 const BARCODE_PATTERN = [2,1,2,1,1,2,1,2,3,1,2,1,2,1,1,2,3,1,2,1,2,1,1,2,1,2,1,1,2,2,1,1,2,1,2,2,1,1,2,1,1,2,2,1,2,1,1,2,1,2,3,1,2,1,1,2,1,2,1,2];
+const FONT_BASE = new URL('fonts/', globalThis.location.href).href;
 let selectedColor = '#7DC320';
 let rows = [], nextId = 1;
 let xlHeaders = [], xlData = [];
@@ -201,7 +210,7 @@ document.querySelectorAll('.color-btn').forEach(btn => {
 function printSingleTag() {
   const tag = document.getElementById('tagPreview');
   const win = window.open('', '_blank', 'width=400,height=300');
-  win.document.write('<html><head><title>ປ້າຍລາຄາ</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#eee;}@media print{body{background:white;}}</style></head><body>');
+  win.document.write(`<html><head><title>ປ້າຍລາຄາ</title><style>@font-face{font-family:'Phetsarath';src:url('${FONT_BASE}Phetsarath-Regular.ttf') format('truetype');font-weight:400;font-style:normal;}@font-face{font-family:'Phetsarath';src:url('${FONT_BASE}Phetsarath-Bold.ttf') format('truetype');font-weight:700;font-style:normal;}body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#eee;font-family:'Phetsarath',sans-serif;}@media print{body{background:white;}}</style></head><body>`);
   win.document.write(tag.outerHTML);
   win.document.write('</body></html>');
   win.document.close();
@@ -226,7 +235,7 @@ function makeTagHTML(row, color) {
   const fmt = new Intl.NumberFormat('th-TH');
   const pf  = row.price ? fmt.format(Number(row.price)) : '0';
   const bc  = row.barcode || '0000000000000';
-  return `<div style="background:${color};border-radius:4px;padding:10px 12px;width:240px;font-family:Arial,sans-serif;display:inline-block;margin:4px;vertical-align:top;">
+  return `<div style="background:${color};border-radius:4px;padding:10px 12px;width:240px;font-family:'Phetsarath',sans-serif;display:inline-block;margin:4px;vertical-align:top;">
     <div style="background:white;border-radius:2px;padding:8px 10px;">
       <div style="font-size:38px;font-weight:900;color:#111;letter-spacing:-1px;line-height:1;">${pf}</div>
       <div style="text-align:right;font-size:13px;font-weight:bold;color:#111;margin-top:-3px;margin-bottom:4px;">ກີບ</div>
@@ -243,7 +252,7 @@ function printBatch() {
   let html = '';
   rows.forEach(r => { const q = parseInt(r.qty) || 1; for (let i = 0; i < q; i++) html += makeTagHTML(r, selectedColor); });
   const win = window.open('', '_blank', 'width=900,height=700');
-  win.document.write(`<html><head><title>ພິມປ້າຍລາຄາ</title><style>body{margin:10px;background:#f5f5f5;}.wrap{display:flex;flex-wrap:wrap;gap:6px;}@media print{body{background:white;margin:0;}.wrap{gap:4px;}}</style></head><body><div class="wrap">${html}</div></body></html>`);
+  win.document.write(`<html><head><title>ພິມປ້າຍລາຄາ</title><style>@font-face{font-family:'Phetsarath';src:url('${FONT_BASE}Phetsarath-Regular.ttf') format('truetype');font-weight:400;font-style:normal;}@font-face{font-family:'Phetsarath';src:url('${FONT_BASE}Phetsarath-Bold.ttf') format('truetype');font-weight:700;font-style:normal;}body{margin:10px;background:#f5f5f5;font-family:'Phetsarath',sans-serif;}.wrap{display:flex;flex-wrap:wrap;gap:6px;}@media print{body{background:white;margin:0;}.wrap{gap:4px;}}</style></head><body><div class="wrap">${html}</div></body></html>`);
   win.document.close(); win.focus(); setTimeout(() => win.print(), 600);
 }
 
@@ -361,3 +370,5 @@ function downloadTemplate() {
 // ========== INIT ==========
 updateTag();
 </script>
+</body>
+</html>
