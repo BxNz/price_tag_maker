@@ -1,0 +1,363 @@
+<link rel="stylesheet" href="price_tag_maker.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<h2 class="sr-only">ເຄື່ອງມືສ້າງປ້າຍລາຄາສິນຄ້າ</h2>
+
+<div class="tag-maker-wrap">
+  <div class="tag-maker-grid">
+
+    <!-- ====== FORM PANEL ====== -->
+    <div class="form-panel">
+      <h3 class="panel-title">ຂໍ້ມູນສິນຄ້າ</h3>
+
+      <div class="field">
+        <label for="productName">ຊື່ສິນຄ້າ</label>
+        <input type="text" id="productName" value="ໂທລະສັບມືຖື I-MOBILE SONY ERICSSON" />
+      </div>
+
+      <div class="field">
+        <label for="price">ລາຄາ (ກີບ)</label>
+        <input type="number" id="price" value="2990" />
+      </div>
+
+      <div class="two-cols field">
+        <div>
+          <label for="barcode">ບາໂຄດ</label>
+          <input type="text" id="barcode" value="2111111608653" />
+        </div>
+        <div>
+          <label for="skuCode">ລະຫັດ SKU</label>
+          <input type="text" id="skuCode" value="90" />
+        </div>
+      </div>
+
+      <div class="two-cols field">
+        <div>
+          <label for="tagDate">ວັນທີ</label>
+          <input type="text" id="tagDate" value="ມິ.ຍ. 08/01/2010" />
+        </div>
+        <div>
+          <label for="unit">ຈຳນວນ (Unit)</label>
+          <input type="number" id="unit" value="1" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>ສີພື້ນຫຼັງ</label>
+        <div class="color-palette">
+          <div class="color-btn active" data-color="#7DC320" style="background:#7DC320;"></div>
+          <div class="color-btn" data-color="#FF5733" style="background:#FF5733;"></div>
+          <div class="color-btn" data-color="#1A73E8" style="background:#1A73E8;"></div>
+          <div class="color-btn" data-color="#E8A200" style="background:#E8A200;"></div>
+          <div class="color-btn" data-color="#CC0000" style="background:#CC0000;"></div>
+          <div class="color-btn" data-color="#222222" style="background:#222222;"></div>
+          <div class="color-btn" data-color="#FF69B4" style="background:#FF69B4;"></div>
+        </div>
+      </div>
+
+      <button class="print-btn" onclick="printSingleTag()">
+        <i class="ti ti-printer" aria-hidden="true"></i> ພິມປ້າຍລາຄາ
+      </button>
+
+      <!-- ====== EXCEL IMPORT SECTION ====== -->
+      <div class="field" style="margin-top:1.4rem;">
+        <div class="panel-title" style="font-size:14px; margin-bottom:10px;">ນຳເຂົ້າຂໍ້ມູນຈາກ Excel</div>
+
+        <div class="drop-zone" id="dropZone" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:120px;border:2px dashed var(--ui-border);border-radius:12px;padding:16px;cursor:pointer;">
+          <i class="ti ti-file-spreadsheet" style="font-size:32px;color:var(--ui-primary);margin-bottom:6px;" aria-hidden="true"></i>
+          <div style="font-size:14px;font-weight:700;color:var(--ui-text);margin-bottom:4px;">ນຳເຂົ້າໄຟລ໌ Excel</div>
+          <div style="font-size:12px;color:var(--ui-muted);margin-bottom:10px;text-align:center;">ຮອງຮັບ .xlsx / .xls / .csv<br>ລາກໄຟລ໌ມາວາງ ຫຼື ກົດປຸ່ມດ້ານລຸ່ມ</div>
+          <label for="xlFile" class="add-btn" style="display:inline-block;min-width:140px;text-align:center;cursor:pointer;margin-bottom:0;">ເລືອກໄຟລ໌ Excel</label>
+          <input type="file" id="xlFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="loadFile(this.files[0])" />
+        </div>
+
+        <div id="colMapSection" style="display:none; margin-top:10px; background:var(--ui-bg-2); border-radius:10px; padding:12px;">
+          <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--ui-text);">ຈັບຄູ່ຄໍລ໌ຈາກ Excel:</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+            <div><label style="font-size:11px;font-weight:700;color:var(--ui-muted);">ຊື່ສິນຄ້າ</label><select id="mapName" style="width:100%;border:1px solid var(--ui-border);border-radius:6px;padding:5px;font-size:12px;"></select></div>
+            <div><label style="font-size:11px;font-weight:700;color:var(--ui-muted);">ລາຄາ</label><select id="mapPrice" style="width:100%;border:1px solid var(--ui-border);border-radius:6px;padding:5px;font-size:12px;"></select></div>
+            <div><label style="font-size:11px;font-weight:700;color:var(--ui-muted);">ບາໂຄດ</label><select id="mapBarcode" style="width:100%;border:1px solid var(--ui-border);border-radius:6px;padding:5px;font-size:12px;"></select></div>
+            <div><label style="font-size:11px;font-weight:700;color:var(--ui-muted);">ຈຳນວນປ້າຍ</label><select id="mapQty" style="width:100%;border:1px solid var(--ui-border);border-radius:6px;padding:5px;font-size:12px;"></select></div>
+          </div>
+          <button class="add-btn" onclick="applyMapping()" style="width:100%;text-align:center;">ນຳເຂົ້າຂໍ້ມູນ</button>
+        </div>
+
+        <div id="tagList" style="margin-top:10px;"></div>
+
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+          <button class="add-btn" onclick="addRow()"><i class="ti ti-plus" aria-hidden="true"></i> ເພີ່ມແຖວ</button>
+          <button class="add-btn" onclick="clearAll()" style="color:var(--ui-muted);"><i class="ti ti-trash" aria-hidden="true"></i> ລ້າງທັງໝົດ</button>
+          <button class="print-btn" onclick="printBatch()" style="margin-left:auto;width:auto;padding:8px 16px;"><i class="ti ti-printer" aria-hidden="true"></i> ພິມທັງໝົດ (<span id="totalCount">0 ປ້າຍ</span>)</button>
+        </div>
+
+        <div style="margin-top:12px;background:var(--ui-bg-2);border-radius:10px;padding:10px 14px;">
+          <div style="font-size:12px;color:var(--ui-muted);margin-bottom:4px;"><i class="ti ti-info-circle" aria-hidden="true"></i> ຮູບແບບ Excel ທີ່ຮອງຮັບ: ຊື່ | ລາຄາ | ບາໂຄດ | ຈຳນວນປ້າຍ (ບໍ່ບັງຄັບ)</div>
+          <button onclick="downloadTemplate()" style="font-size:12px;background:none;border:1px solid var(--ui-border);border-radius:6px;padding:4px 12px;cursor:pointer;color:var(--ui-text);">
+            <i class="ti ti-download" aria-hidden="true"></i> ດາວໂຫຼດໄຟລ໌ຕົວຢ່າງ (.csv)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== PREVIEW PANEL ====== -->
+    <div class="preview-panel">
+      <h3 class="panel-title">ຕົວຢ່າງປ້າຍ</h3>
+      <div id="tagPreview">
+        <div class="tag-inner">
+          <div id="previewPrice">2,990</div>
+          <div class="kip-label">ກີບ</div>
+          <div id="previewName">ໂທລະສັບມືຖື I-MOBILE SONY ERICSSON</div>
+          <div class="preview-row preview-meta">
+            <span id="previewPriceSmall">2,990 ກີບ/1 ເຄື່ອງ</span>
+            <span id="previewSku">90</span>
+          </div>
+          <div class="barcode-wrap">
+            <svg id="barcodesvg" xmlns="http://www.w3.org/2000/svg" width="250" height="36"></svg>
+          </div>
+          <div class="preview-row">
+            <span id="previewDate">ມິ.ຍ. 08/01/2010</span>
+            <span id="previewUnit">1 ເຄື່ອງ</span>
+          </div>
+          <div class="preview-code">42631:00210066/0</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ========== SHARED STATE ==========
+const BARCODE_PATTERN = [2,1,2,1,1,2,1,2,3,1,2,1,2,1,1,2,3,1,2,1,2,1,1,2,1,2,1,1,2,2,1,1,2,1,2,2,1,1,2,1,1,2,2,1,2,1,1,2,1,2,3,1,2,1,1,2,1,2,1,2];
+let selectedColor = '#7DC320';
+let rows = [], nextId = 1;
+let xlHeaders = [], xlData = [];
+
+// ========== SINGLE TAG PREVIEW ==========
+function updateTag() {
+  const price = document.getElementById('price').value;
+  const name  = document.getElementById('productName').value;
+  const barcode = document.getElementById('barcode').value;
+  const sku   = document.getElementById('skuCode').value;
+  const date  = document.getElementById('tagDate').value;
+  const unit  = document.getElementById('unit').value;
+  const fmt   = new Intl.NumberFormat('th-TH');
+
+  document.getElementById('previewPrice').textContent     = fmt.format(Number(price));
+  document.getElementById('previewName').textContent      = name;
+  document.getElementById('previewSku').textContent       = sku;
+  document.getElementById('previewDate').textContent      = date;
+  document.getElementById('previewUnit').textContent      = unit + ' ເຄື່ອງ';
+  document.getElementById('previewPriceSmall').textContent = fmt.format(Number(price)) + ' ກີບ';
+  drawBarcodeToSvg('barcodesvg', barcode, 250, 36, 9);
+}
+
+function drawBarcodeToSvg(svgId, code, w, h, fontSize) {
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = '';
+  let x = 4;
+  const total = BARCODE_PATTERN.reduce((a, b) => a + b, 0);
+  const scale = (w - 8) / total;
+  BARCODE_PATTERN.forEach((p, i) => {
+    const bw = p * scale;
+    if (i % 2 === 0) {
+      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rect.setAttribute('x', x);
+      rect.setAttribute('y', 0);
+      rect.setAttribute('width', Math.max(bw - 0.5, 0.8));
+      rect.setAttribute('height', h - 8);
+      rect.setAttribute('fill', '#111');
+      svg.appendChild(rect);
+    }
+    x += bw;
+  });
+  const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  txt.setAttribute('x', w / 2);
+  txt.setAttribute('y', h - 1);
+  txt.setAttribute('text-anchor', 'middle');
+  txt.setAttribute('font-size', fontSize);
+  txt.setAttribute('fill', '#333');
+  txt.setAttribute('font-family', 'monospace');
+  txt.textContent = code;
+  svg.appendChild(txt);
+}
+
+// Color palette — single tag
+document.querySelectorAll('.color-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedColor = btn.dataset.color;
+    document.getElementById('tagPreview').style.background = selectedColor;
+  });
+});
+
+// Live preview inputs
+['price','productName','barcode','skuCode','tagDate','unit'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateTag);
+});
+
+// ========== PRINT SINGLE TAG ==========
+function printSingleTag() {
+  const tag = document.getElementById('tagPreview');
+  const win = window.open('', '_blank', 'width=400,height=300');
+  win.document.write('<html><head><title>ປ້າຍລາຄາ</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#eee;}@media print{body{background:white;}}</style></head><body>');
+  win.document.write(tag.outerHTML);
+  win.document.write('</body></html>');
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 500);
+}
+
+// ========== BARCODE HTML (for batch print) ==========
+function makeBarcodeHTML(code) {
+  const tot = BARCODE_PATTERN.reduce((a, b) => a + b, 0);
+  const W = 220, H = 30, scale = (W - 8) / tot;
+  let x = 4, bars = '';
+  BARCODE_PATTERN.forEach((p, i) => {
+    const bw = p * scale;
+    if (i % 2 === 0) bars += `<rect x="${x.toFixed(1)}" y="0" width="${Math.max(bw - 0.5, 0.8).toFixed(1)}" height="${H - 8}" fill="#111"/>`;
+    x += bw;
+  });
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">${bars}<text x="${W/2}" y="${H-1}" text-anchor="middle" font-size="8" fill="#333" font-family="monospace">${code}</text></svg>`;
+}
+
+function makeTagHTML(row, color) {
+  const fmt = new Intl.NumberFormat('th-TH');
+  const pf  = row.price ? fmt.format(Number(row.price)) : '0';
+  const bc  = row.barcode || '0000000000000';
+  return `<div style="background:${color};border-radius:4px;padding:10px 12px;width:240px;font-family:Arial,sans-serif;display:inline-block;margin:4px;vertical-align:top;">
+    <div style="background:white;border-radius:2px;padding:8px 10px;">
+      <div style="font-size:38px;font-weight:900;color:#111;letter-spacing:-1px;line-height:1;">${pf}</div>
+      <div style="text-align:right;font-size:13px;font-weight:bold;color:#111;margin-top:-3px;margin-bottom:4px;">ກີບ</div>
+      <div style="font-size:10px;color:#111;border-top:0.5px solid #ccc;padding-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${row.name || 'ສິນຄ້າ'}</div>
+      <div style="font-size:9px;color:#333;margin-top:2px;">${pf} ກີບ/1 ເຄື່ອງ</div>
+      <div style="margin:4px 0 2px;">${makeBarcodeHTML(bc)}</div>
+    </div>
+  </div>`;
+}
+
+// ========== PRINT BATCH ==========
+function printBatch() {
+  if (rows.length === 0) { alert('ກະລຸນາເພີ່ມສິນຄ້າກ່ອນ'); return; }
+  let html = '';
+  rows.forEach(r => { const q = parseInt(r.qty) || 1; for (let i = 0; i < q; i++) html += makeTagHTML(r, selectedColor); });
+  const win = window.open('', '_blank', 'width=900,height=700');
+  win.document.write(`<html><head><title>ພິມປ້າຍລາຄາ</title><style>body{margin:10px;background:#f5f5f5;}.wrap{display:flex;flex-wrap:wrap;gap:6px;}@media print{body{background:white;margin:0;}.wrap{gap:4px;}}</style></head><body><div class="wrap">${html}</div></body></html>`);
+  win.document.close(); win.focus(); setTimeout(() => win.print(), 600);
+}
+
+// ========== EXCEL IMPORT ==========
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor = 'var(--ui-primary)'; });
+dz.addEventListener('dragleave', () => { dz.style.borderColor = 'var(--ui-border)'; });
+dz.addEventListener('drop', e => {
+  e.preventDefault();
+  dz.style.borderColor = 'var(--ui-border)';
+  if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+});
+
+function loadFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb   = XLSX.read(e.target.result, { type: 'binary' });
+      const ws   = wb.Sheets[wb.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      if (!json || json.length < 2) { alert('ບໍ່ພົບຂໍ້ມູນໃນໄຟລ໌'); return; }
+      xlHeaders = json[0].map((h, i) => (h !== undefined && h !== '') ? String(h) : 'ຄໍລ໌ ' + (i + 1));
+      xlData    = json.slice(1).filter(r => r.some(c => c !== undefined && c !== ''));
+
+      dz.innerHTML = `<i class="ti ti-circle-check" style="font-size:24px;color:#7DC320;" aria-hidden="true"></i>
+        <div style="font-size:13px;margin-top:4px;color:var(--ui-text);">${file.name} — ພົບ ${xlData.length} ແຖວ</div>
+        <div style="font-size:11px;color:var(--ui-muted);margin-top:2px;">ກົດເພື່ອປ່ຽນໄຟລ໌</div>
+        <input type="file" id="xlFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="loadFile(this.files[0])" />`;
+
+      showColMap();
+    } catch (err) {
+      console.error(err);
+      alert('ອ່ານໄຟລ໌ບໍ່ໄດ້ ລອງໃໝ່ອີກຄັ້ງ');
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+function showColMap() {
+  const sec = document.getElementById('colMapSection');
+  sec.style.display = 'block';
+  ['mapName','mapPrice','mapBarcode','mapQty'].forEach((id, idx) => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = '<option value="-1">-- ບໍ່ໃຊ້ --</option>' +
+      xlHeaders.map((h, i) => `<option value="${i}" ${i === idx ? 'selected' : ''}>${h}</option>`).join('');
+  });
+}
+
+function applyMapping() {
+  const mi = v => parseInt(document.getElementById(v).value);
+  const iN = mi('mapName'), iP = mi('mapPrice'), iB = mi('mapBarcode'), iQ = mi('mapQty');
+  rows = [];
+  xlData.forEach(r => {
+    rows.push({
+      id: nextId++,
+      name:    iN >= 0 ? String(r[iN] || '') : '',
+      price:   iP >= 0 ? String(r[iP] || '') : '',
+      barcode: iB >= 0 ? String(r[iB] || '') : '',
+      qty:     iQ >= 0 ? parseInt(r[iQ]) || 1 : 1
+    });
+  });
+  renderList();
+  document.getElementById('colMapSection').style.display = 'none';
+}
+
+// ========== ROW MANAGEMENT ==========
+function addRow(n = '', p = '', b = '', q = 1) {
+  rows.push({ id: nextId++, name: n, price: p, barcode: b, qty: q });
+  renderList();
+}
+
+function removeRow(id) { rows = rows.filter(r => r.id !== id); renderList(); }
+function clearAll()    { rows = []; renderList(); }
+
+function renderList() {
+  const list = document.getElementById('tagList');
+  list.innerHTML = '';
+  rows.forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'tag-row';
+    div.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1.5fr 60px 36px;gap:6px;margin-bottom:6px;align-items:center;';
+    div.innerHTML = `
+      <input type="text"   placeholder="ຊື່ສິນຄ້າ" value="${r.name.replace(/"/g,'&quot;')}"  onchange="updateRow(${r.id},'name',this.value)"/>
+      <input type="number" placeholder="ລາຄາ"       value="${r.price}"                          onchange="updateRow(${r.id},'price',this.value)"/>
+      <input type="text"   placeholder="ບາໂຄດ"      value="${r.barcode}"                        onchange="updateRow(${r.id},'barcode',this.value)"/>
+      <input type="number" min="1" max="200"         value="${r.qty}"                            onchange="updateRow(${r.id},'qty',this.value)"/>
+      <button class="del-btn" onclick="removeRow(${r.id})"><i class="ti ti-trash" aria-hidden="true"></i></button>`;
+    list.appendChild(div);
+  });
+  updateCount();
+}
+
+function updateRow(id, f, v) {
+  const r = rows.find(r => r.id === id);
+  if (r) r[f] = f === 'qty' ? Math.max(1, parseInt(v) || 1) : v;
+  updateCount();
+}
+
+function updateCount() {
+  const t = rows.reduce((s, r) => s + (parseInt(r.qty) || 1), 0);
+  document.getElementById('totalCount').textContent = t + ' ປ້າຍ';
+}
+
+// ========== DOWNLOAD TEMPLATE ==========
+function downloadTemplate() {
+  const csv = "ຊື່ສິນຄ້າ,ລາຄາ,ບາໂຄດ,ຈຳນວນປ້າຍ\nໂທລະສັບ Samsung,2990,2111111608653,3\nຫູຟັງ Bluetooth,590,3000000001234,2\nແທັບເລັດ iPad,12900,4000000005678,1";
+  const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'template_pricetag.csv';
+  a.click();
+}
+
+// ========== INIT ==========
+updateTag();
+</script>
