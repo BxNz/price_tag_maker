@@ -6,6 +6,7 @@
 <title>ເຄື່ອງມືສ້າງປ້າຍລາຄາ</title>
 <link rel="stylesheet" href="price_tag_maker.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
@@ -95,6 +96,8 @@
         <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
           <button class="add-btn" onclick="addRow()"><i class="ti ti-plus" aria-hidden="true"></i> ເພີ່ມແຖວ</button>
           <button class="add-btn" onclick="clearAll()" style="color:var(--ui-muted);"><i class="ti ti-trash" aria-hidden="true"></i> ລ້າງທັງໝົດ</button>
+          <button class="add-btn" onclick="previewBatch()"><i class="ti ti-eye" aria-hidden="true"></i> ເບິ່ງຕົວຢ່າງກ່ອນ Export</button>
+          <button class="add-btn" onclick="exportBatchPdf()"><i class="ti ti-file-download" aria-hidden="true"></i> Export PDF</button>
           <button class="print-btn" onclick="printBatch()" style="margin-left:auto;width:auto;padding:8px 16px;"><i class="ti ti-printer" aria-hidden="true"></i> ພິມທັງໝົດ (<span id="totalCount">0 ປ້າຍ</span>)</button>
         </div>
 
@@ -246,14 +249,67 @@ function makeTagHTML(row, color) {
   </div>`;
 }
 
+function buildBatchTagsHTML() {
+  let html = '';
+  rows.forEach(r => {
+    const q = parseInt(r.qty) || 1;
+    for (let i = 0; i < q; i++) html += makeTagHTML(r, selectedColor);
+  });
+  return html;
+}
+
 // ========== PRINT BATCH ==========
 function printBatch() {
   if (rows.length === 0) { alert('ກະລຸນາເພີ່ມສິນຄ້າກ່ອນ'); return; }
-  let html = '';
-  rows.forEach(r => { const q = parseInt(r.qty) || 1; for (let i = 0; i < q; i++) html += makeTagHTML(r, selectedColor); });
+  const html = buildBatchTagsHTML();
   const win = window.open('', '_blank', 'width=900,height=700');
   win.document.write(`<html><head><title>ພິມປ້າຍລາຄາ</title><style>@font-face{font-family:'Phetsarath';src:url('${FONT_BASE}Phetsarath-Regular.ttf') format('truetype');font-weight:400;font-style:normal;}@font-face{font-family:'Phetsarath';src:url('${FONT_BASE}Phetsarath-Bold.ttf') format('truetype');font-weight:700;font-style:normal;}body{margin:10px;background:#f5f5f5;font-family:'Phetsarath',sans-serif;}.wrap{display:flex;flex-wrap:wrap;gap:6px;}@media print{body{background:white;margin:0;}.wrap{gap:4px;}}</style></head><body><div class="wrap">${html}</div></body></html>`);
   win.document.close(); win.focus(); setTimeout(() => win.print(), 600);
+}
+
+function previewBatch() {
+  if (rows.length === 0) { alert('ກະລຸນາເພີ່ມສິນຄ້າກ່ອນ'); return; }
+  const total = rows.reduce((s, r) => s + (parseInt(r.qty) || 1), 0);
+  const html = buildBatchTagsHTML();
+  const win = window.open('', '_blank', 'width=1100,height=760');
+  win.document.write(`<html><head><title>Preview ປ້າຍລາຄາ</title><style>@font-face{font-family:'Phetsarath';src:url('${FONT_BASE}Phetsarath-Regular.ttf') format('truetype');font-weight:400;font-style:normal;}@font-face{font-family:'Phetsarath';src:url('${FONT_BASE}Phetsarath-Bold.ttf') format('truetype');font-weight:700;font-style:normal;}body{margin:0;background:#f3f3f3;font-family:'Phetsarath',sans-serif;color:#2a1f16;}.top{position:sticky;top:0;z-index:2;background:#fff;border-bottom:1px solid #e5e5e5;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;}.actions{display:flex;gap:8px;}.btn{border:1px solid #d5d5d5;background:#fff;border-radius:8px;padding:7px 12px;cursor:pointer;font:inherit;}.btn.primary{border:none;background:#db5c26;color:#fff;font-weight:700;}.content{padding:10px;}.wrap{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;}</style></head><body><div class="top"><div>ຕົວຢ່າງກ່ອນ Export: ${total} ປ້າຍ</div><div class="actions"><button class="btn" onclick="window.print()">ພິມທົດລອງ</button><button class="btn primary" onclick="window.opener && window.opener.exportBatchPdf();">Export PDF</button><button class="btn" onclick="window.close()">ປິດ</button></div></div><div class="content"><div class="wrap">${html}</div></div></body></html>`);
+  win.document.close();
+  win.focus();
+}
+
+// ========== EXPORT BATCH PDF ==========
+async function exportBatchPdf() {
+  if (rows.length === 0) { alert('ກະລຸນາເພີ່ມສິນຄ້າກ່ອນ'); return; }
+  if (typeof html2pdf === 'undefined') {
+    alert('ບໍ່ພົບຕົວສ້າງ PDF ກະລຸນາລອງໃໝ່');
+    return;
+  }
+
+  const total = rows.reduce((s, r) => s + (parseInt(r.qty) || 1), 0);
+  const paper = document.createElement('div');
+  paper.style.width = '190mm';
+  paper.style.minHeight = '277mm';
+  paper.style.padding = '4mm';
+  paper.style.background = '#ffffff';
+  paper.style.fontFamily = "'Phetsarath', sans-serif";
+  paper.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:flex-start;">${buildBatchTagsHTML()}</div>`;
+
+  const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const filename = `price-tags-${total}-${stamp}.pdf`;
+
+  try {
+    await html2pdf().set({
+      margin: [5, 5, 5, 5],
+      filename,
+      image: { type: 'jpeg', quality: 0.96 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] }
+    }).from(paper).save();
+  } catch (err) {
+    console.error(err);
+    alert('Export PDF ບໍ່ສຳເລັດ ກະລຸນາລອງໃໝ່');
+  }
 }
 
 // ========== EXCEL IMPORT ==========
