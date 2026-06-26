@@ -162,12 +162,15 @@ function updateTag() {
   document.getElementById('previewDate').textContent      = date;
   document.getElementById('previewUnit').textContent      = unit + ' ອັນ';
   document.getElementById('previewPriceSmall').textContent = fmt.format(Number(price)) + ' ກີບ';
-  drawBarcodeToSvg('barcodesvg', barcode, 250, 36, 9);
+  drawBarcodeToSvg('barcodesvg', barcode, 170, 24, 7);
 }
 
 function drawBarcodeToSvg(svgId, code, w, h, fontSize) {
   const svg = document.getElementById(svgId);
   svg.innerHTML = '';
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', h);
   let x = 4;
   const total = BARCODE_PATTERN.reduce((a, b) => a + b, 0);
   const scale = (w - 8) / total;
@@ -225,27 +228,27 @@ function printSingleTag() {
 // ========== BARCODE HTML (for batch print) ==========
 function makeBarcodeHTML(code) {
   const tot = BARCODE_PATTERN.reduce((a, b) => a + b, 0);
-  const W = 220, H = 30, scale = (W - 8) / tot;
+  const W = 170, H = 24, scale = (W - 8) / tot;
   let x = 4, bars = '';
   BARCODE_PATTERN.forEach((p, i) => {
     const bw = p * scale;
     if (i % 2 === 0) bars += `<rect x="${x.toFixed(1)}" y="0" width="${Math.max(bw - 0.5, 0.8).toFixed(1)}" height="${H - 8}" fill="#111"/>`;
     x += bw;
   });
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">${bars}<text x="${W/2}" y="${H-1}" text-anchor="middle" font-size="8" fill="#333" font-family="monospace">${code}</text></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">${bars}<text x="${W/2}" y="${H-1}" text-anchor="middle" font-size="7" fill="#333" font-family="monospace">${code}</text></svg>`;
 }
 
 function makeTagHTML(row, color) {
   const fmt = new Intl.NumberFormat('th-TH');
   const pf  = row.price ? fmt.format(Number(row.price)) : '0';
   const bc  = row.barcode || '0000000000000';
-  return `<div style="background:${color};border-radius:4px;padding:10px 12px;width:240px;font-family:'Phetsarath',sans-serif;display:inline-block;margin:4px;vertical-align:top;">
-    <div style="background:white;border-radius:2px;padding:8px 10px;">
-      <div style="font-size:38px;font-weight:900;color:#111;letter-spacing:-1px;line-height:1;">${pf}</div>
-      <div style="text-align:right;font-size:13px;font-weight:bold;color:#111;margin-top:-3px;margin-bottom:4px;">ກີບ</div>
-      <div style="font-size:10px;color:#111;border-top:0.5px solid #ccc;padding-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${row.name || 'ສິນຄ້າ'}</div>
-      <div style="font-size:9px;color:#333;margin-top:2px;">${pf} ກີບ/1 ອັນ</div>
-      <div style="margin:4px 0 2px;">${makeBarcodeHTML(bc)}</div>
+  return `<div style="background:${color};border-radius:4px;padding:8px 9px;width:6cm;height:5cm;box-sizing:border-box;font-family:'Phetsarath',sans-serif;display:inline-block;margin:4px;vertical-align:top;overflow:hidden;">
+    <div style="background:white;border-radius:2px;padding:6px 8px;height:100%;box-sizing:border-box;overflow:hidden;">
+      <div style="font-size:34px;font-weight:900;color:#111;letter-spacing:-1px;line-height:1;">${pf}</div>
+      <div style="text-align:right;font-size:12px;font-weight:bold;color:#111;margin-top:-3px;margin-bottom:3px;">ກີບ</div>
+      <div style="font-size:9px;color:#111;border-top:0.5px solid #ccc;padding-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${row.name || 'ສິນຄ້າ'}</div>
+      <div style="font-size:8px;color:#333;margin-top:2px;">${pf} ກີບ/1 ອັນ</div>
+      <div style="margin:3px 0 1px;overflow:hidden;">${makeBarcodeHTML(bc)}</div>
     </div>
   </div>`;
 }
@@ -288,22 +291,22 @@ async function exportBatchPdf() {
 
   const total = rows.reduce((s, r) => s + (parseInt(r.qty) || 1), 0);
   const paper = document.createElement('div');
-  paper.style.width = '190mm';
-  paper.style.minHeight = '277mm';
+  paper.style.width = '200mm';
   paper.style.padding = '4mm';
+  paper.style.margin = '0';
   paper.style.background = '#ffffff';
   paper.style.fontFamily = "'Phetsarath', sans-serif";
-  paper.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:flex-start;">${buildBatchTagsHTML()}</div>`;
+  paper.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:flex-start;align-content:flex-start;justify-content:flex-start;">${buildBatchTagsHTML()}</div>`;
 
   const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
   const filename = `price-tags-${total}-${stamp}.pdf`;
 
   try {
     await html2pdf().set({
-      margin: [5, 5, 5, 5],
+      margin: [0, 0, 0, 0],
       filename,
       image: { type: 'jpeg', quality: 0.96 },
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0 },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['css', 'legacy'] }
     }).from(paper).save();

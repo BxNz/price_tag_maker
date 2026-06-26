@@ -264,23 +264,27 @@ textarea {
   margin: 0 auto;
   background: #7DC320;
   border-radius: 10px;
-  padding: 12px 14px;
-  width: 100%;
-  max-width: 300px;
+  padding: 8px 9px;
+  width: 6cm;
+  height: 5cm;
+  max-width: none;
   box-sizing: border-box;
   font-family: 'Phetsarath', sans-serif;
   position: relative;
   box-shadow: 0 10px 18px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
 }
 
 .tag-inner {
   background: white;
   border-radius: 4px;
-  padding: 10px 12px;
+  padding: 6px 8px;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 #previewPrice {
-  font-size: 42px;
+  font-size: 34px;
   font-weight: 900;
   color: #111;
   letter-spacing: -1px;
@@ -289,18 +293,18 @@ textarea {
 
 .kip-label {
   text-align: right;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: bold;
   color: #111;
-  margin-top: -4px;
-  margin-bottom: 6px;
+  margin-top: -3px;
+  margin-bottom: 3px;
 }
 
 #previewName {
-  font-size: 11px;
+  font-size: 9px;
   color: #111;
   border-top: 0.5px solid #ccc;
-  padding-top: 5px;
+  padding-top: 3px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -312,29 +316,35 @@ textarea {
 }
 
 .preview-meta {
-  margin-top: 3px;
+  margin-top: 2px;
 }
 
 #previewPriceSmall,
 #previewSku {
-  font-size: 10px;
+  font-size: 8px;
   color: #333;
 }
 
 .barcode-wrap {
-  margin: 6px 0 3px;
+  margin: 3px 0 1px;
+}
+
+.barcode-wrap svg {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 #previewDate,
 #previewUnit {
-  font-size: 9px;
+  font-size: 8px;
   color: #555;
 }
 
 .preview-code {
-  font-size: 9px;
+  font-size: 8px;
   color: #777;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 @media (max-width: 880px) {
